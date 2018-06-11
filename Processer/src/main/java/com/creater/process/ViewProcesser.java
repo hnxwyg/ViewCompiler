@@ -1,6 +1,7 @@
 package com.creater.process;
 
 import android.content.Context;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import com.creater.annotation.NewView;
@@ -45,6 +46,8 @@ public class ViewProcesser extends AbstractProcessor {
     private RoundEnvironment mRoundEnv = null;
     private Map<String, List<Element>> elementMap = new HashMap<>();
     private static boolean hasProcess = false;
+    private static final String METHOD_NAME = "doNewView";
+    private static final String TARGET_NAME = "target";
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -101,31 +104,56 @@ public class ViewProcesser extends AbstractProcessor {
                 //3.获取注解的成员变量类型
                 String classType = bindViewElement.asType().toString();
                 //4.获取注解元数据
-                NewView bindView = element.getAnnotation(NewView.class);
+                NewView view = element.getAnnotation(NewView.class);
                 String methodName = "add" + fieldName;
-                String targetName = "target";
+
                 methods.add(methodName);
                 MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                         .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                         .returns(void.class)
                         .addParameter(Context.class, "ctx")
-                        .addParameter(target, targetName);
-                String parent = bindView.parent();
+                        .addParameter(target, TARGET_NAME);
+                String parent = view.parent();
                 String viewName = "v";
                 methodBuilder.addStatement("$T " + viewName + "= new $T(ctx)",ClassName.get(bindViewElement.asType()),
                         ClassName.get(bindViewElement.asType()));
                 if (parent != null && parent != "") {
                     CodeBlock block = getLayoutParamsCodeBlock(parent, element);
                     methodBuilder.addCode(block);
-                    methodBuilder.addStatement(targetName + ".$L.addView(" + viewName + ",params)", parent);
+                    methodBuilder.addStatement(TARGET_NAME + ".$L.addView(" + viewName + ",params)", parent);
+                }
+
+                if (view.visible() != View.VISIBLE)
+                    methodBuilder.addStatement(viewName + ".setVisibility($L)",view.visible());
+                if (view.bgcolor() != -1)
+                    methodBuilder.addStatement(viewName + ".setBackgroundColor($L)",view.bgcolor());
+                if (view.bgres() != 0)
+                    methodBuilder.addStatement(viewName + ".setBackgroundResource($L)",view.bgres());
+                if (view.focusable()){
+                    methodBuilder.addStatement(viewName + ".setFocusable($L)",view.focusable());
+                    methodBuilder.addStatement(viewName + ".setFocusableInTouchMode($L)",view.focusable());
+                }
+                if (view.bgcolorId() != 0){
+                    methodBuilder.addStatement("int color = ctx.getResources().getColor($L)",view.bgcolorId());
+                    methodBuilder.addStatement(viewName + ".setBackgroundColor(color)");
                 }
                 CodeBlock paddingBlock = getPaddingCodeBlock(viewName,element);
                 methodBuilder.addCode(paddingBlock);
-                CodeBlock listenerBlock = getListenerCodeBlock(targetName,viewName,element);
+                CodeBlock listenerBlock = getListenerCodeBlock(TARGET_NAME,viewName,element);
                 methodBuilder.addCode(listenerBlock);
-                methodBuilder.addStatement(targetName + ".$L = " + viewName, fieldName);
+                methodBuilder.addStatement(TARGET_NAME + ".$L = " + viewName, fieldName);
                 clazzTypeBuilder.addMethod(methodBuilder.build());
             }
+
+            MethodSpec.Builder spec = MethodSpec.methodBuilder(METHOD_NAME)
+                    .addModifiers(Modifier.PUBLIC,Modifier.STATIC)
+                    .returns(void.class)
+                    .addParameter(Context.class, "ctx")
+                    .addParameter(target,TARGET_NAME);
+            for (String method : methods) {
+                spec.addStatement(method + "(ctx," + TARGET_NAME + ")");
+            }
+            clazzTypeBuilder.addMethod(spec.build());
             JavaFile javaFile = JavaFile.builder(pkg, clazzTypeBuilder.build())
                     .build();
             try {

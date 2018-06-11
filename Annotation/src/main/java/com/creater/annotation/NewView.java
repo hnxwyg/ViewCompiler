@@ -16,7 +16,9 @@ public @interface NewView {
     int width() default -1;
     int height() default -1;
     int visible() default View.VISIBLE;
-    int bg() default 0;
+    int bgres() default 0;
+    int bgcolor() default -1;
+    int bgcolorId() default 0;
     boolean focusable() default false;
     String parent() default "";
     Margin margin() default @Margin;
