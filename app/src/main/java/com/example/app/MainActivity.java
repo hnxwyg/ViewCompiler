@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.creater.annotation.Image;
 import com.creater.annotation.Listener;
 import com.creater.annotation.Margin;
 import com.creater.annotation.NewView;
@@ -18,13 +19,15 @@ public class MainActivity extends Activity {
 
     @NewView()
     FrameLayout mainLayout = null;
-    @NewView(width = 200, height = 200,
+
+    @NewView(width = 20, height = 200,
             parent = "mainLayout",
             bgcolor = Color.RED,
             focusable = true,
             margin = @Margin(left = 50, top = 200),
             padding = @Padding(left = 20, right = 20),
             listener = @Listener(focusListener = "focusChangeListener"))
+    @Image(scaleType = ImageView.ScaleType.CENTER)
     ImageView img = null;
 
 

@@ -4,10 +4,13 @@ import android.content.Context;
 import android.view.View;
 import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import com.creater.annotation.Image;
 import com.creater.annotation.NewView;
+import com.creater.annotation.Text;
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -142,6 +145,13 @@ public class ViewProcesser extends AbstractProcessor {
                     methodBuilder.addStatement("int color = ctx.getResources().getColor($L)",view.bgcolorId());
                     methodBuilder.addStatement(viewName + ".setBackgroundColor(color)");
                 }
+
+                CodeBlock textBlock = getTextViewCodeBlock(viewName,element.getAnnotation(Text.class));
+                if (textBlock != null)
+                     methodBuilder.addCode(textBlock);
+                CodeBlock imageBlock = getImageViewCodeBlock(viewName,element.getAnnotation(Image.class));
+                if (imageBlock != null)
+                    methodBuilder.addCode(imageBlock);
                 CodeBlock paddingBlock = getPaddingCodeBlock(viewName,element);
                 if (paddingBlock != null)
                     methodBuilder.addCode(paddingBlock);
@@ -179,6 +189,41 @@ public class ViewProcesser extends AbstractProcessor {
 
     private void note(String format, Object... args) {
         mMessager.printMessage(Diagnostic.Kind.NOTE, String.format(format, args));
+    }
+
+    private CodeBlock getTextViewCodeBlock(String viewName,Text textView){
+        if (textView != null){
+            CodeBlock.Builder builder = CodeBlock.builder();
+            if (!"".equals(textView.text())){
+                builder.addStatement(viewName + ".setText($L)",textView.text());
+            }else if(textView.textId() != 0){
+                builder.addStatement(viewName + ".setText($L)",textView.textId());
+            }
+            if (textView.textColor() != -1){
+                builder.addStatement(viewName + ".setTextColor($L)",textView.textColor());
+            }else if(textView.textColorId() != 0){
+                builder.addStatement("int color = ctx.getResources().getColor($L)",textView.textColorId());
+                builder.addStatement(viewName + ".setTextColor(color)");
+            }
+            if (textView.textSize() != 0){
+                builder.addStatement(viewName + ".setTextSize($L)",textView.textSize());
+            }
+            return builder.build();
+        }
+        return null;
+    }
+
+    private CodeBlock getImageViewCodeBlock(String viewName,Image imageView){
+        if (imageView != null){
+            CodeBlock.Builder builder = CodeBlock.builder();
+            if (imageView.src() != 0){
+                builder.addStatement(viewName + ".setImageResource($L)",imageView.src());
+            }
+            builder.addStatement(viewName + ".setScaleType($T.$L)", ImageView.ScaleType.class,imageView.scaleType());
+            return builder.build();
+        }
+
+        return null;
     }
 
     private CodeBlock getLayoutParamsCodeBlock(String field, Element element) {
