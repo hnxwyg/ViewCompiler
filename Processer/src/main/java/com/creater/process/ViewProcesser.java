@@ -2,7 +2,10 @@ package com.creater.process;
 
 import android.content.Context;
 import android.view.View;
+import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.creater.annotation.NewView;
 import com.google.auto.service.AutoService;
@@ -117,10 +120,12 @@ public class ViewProcesser extends AbstractProcessor {
                 String viewName = "v";
                 methodBuilder.addStatement("$T " + viewName + "= new $T(ctx)",ClassName.get(bindViewElement.asType()),
                         ClassName.get(bindViewElement.asType()));
-                if (parent != null && parent != "") {
+                if (parent != null && !parent.equals("")) {
                     CodeBlock block = getLayoutParamsCodeBlock(parent, element);
-                    methodBuilder.addCode(block);
-                    methodBuilder.addStatement(TARGET_NAME + ".$L.addView(" + viewName + ",params)", parent);
+                    if (block != null){
+                        methodBuilder.addCode(block);
+                        methodBuilder.addStatement(TARGET_NAME + ".$L.addView(" + viewName + ",params)", parent);
+                    }
                 }
 
                 if (view.visible() != View.VISIBLE)
@@ -138,9 +143,11 @@ public class ViewProcesser extends AbstractProcessor {
                     methodBuilder.addStatement(viewName + ".setBackgroundColor(color)");
                 }
                 CodeBlock paddingBlock = getPaddingCodeBlock(viewName,element);
-                methodBuilder.addCode(paddingBlock);
+                if (paddingBlock != null)
+                    methodBuilder.addCode(paddingBlock);
                 CodeBlock listenerBlock = getListenerCodeBlock(TARGET_NAME,viewName,element);
-                methodBuilder.addCode(listenerBlock);
+                if (listenerBlock != null)
+                    methodBuilder.addCode(listenerBlock);
                 methodBuilder.addStatement(TARGET_NAME + ".$L = " + viewName, fieldName);
                 clazzTypeBuilder.addMethod(methodBuilder.build());
             }
@@ -177,17 +184,31 @@ public class ViewProcesser extends AbstractProcessor {
     private CodeBlock getLayoutParamsCodeBlock(String field, Element element) {
         VariableElement variableElement = getFieldElement(field, element);
         NewView view = element.getAnnotation(NewView.class);
+        Class paramsClazz = null;
         if (variableElement != null) {
-            if ("android.widget.FrameLayout".equals(variableElement.asType().toString())){
-                return CodeBlock.builder().addStatement("$T params = new $T($L,$L)", FrameLayout.LayoutParams.class,
-                        FrameLayout.LayoutParams.class,view.width(),view.height())
-                        .addStatement("params.leftMargin = $L",view.margin().left())
-                        .addStatement("params.topMargin = $L",view.margin().top())
-                        .addStatement("params.rightMargin = $L",view.margin().right())
-                        .addStatement("params.bottomMargin = $L",view.margin().bottom()).build();
+            String parentType = variableElement.asType().toString();
+            if ("android.widget.FrameLayout".equals(parentType)){
+                paramsClazz = FrameLayout.LayoutParams.class;
+            }else if("android.widget.LinearLayout".equals(parentType)){
+                paramsClazz = LinearLayout.LayoutParams.class;
+            }else if("android.widget.RelativeLayout".equals(parentType)){
+                paramsClazz = RelativeLayout.LayoutParams.class;
+            }else if("android.widget.AbsoluteLayout".equals(parentType)){
+                paramsClazz = AbsoluteLayout.LayoutParams.class;
             }
         }
+        if (paramsClazz != null)
+            return getLayoutParamsCodeBlock(paramsClazz,view);
         return null;
+    }
+
+    private CodeBlock getLayoutParamsCodeBlock(Class clazz,NewView view){
+        return CodeBlock.builder().addStatement("$T params = new $T($L,$L)", clazz,
+                FrameLayout.LayoutParams.class,view.width(),view.height())
+                .addStatement("params.leftMargin = $L",view.margin().left())
+                .addStatement("params.topMargin = $L",view.margin().top())
+                .addStatement("params.rightMargin = $L",view.margin().right())
+                .addStatement("params.bottomMargin = $L",view.margin().bottom()).build();
     }
 
     private CodeBlock getPaddingCodeBlock(String viewName,Element element){

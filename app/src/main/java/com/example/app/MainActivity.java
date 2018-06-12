@@ -16,9 +16,10 @@ import com.creater.api.ViewCreater;
 
 public class MainActivity extends Activity {
 
-    FrameLayout mainLayoutt = null;
+    @NewView()
+    FrameLayout mainLayout = null;
     @NewView(width = 200, height = 200,
-            parent = "mainLayoutt",
+            parent = "mainLayout",
             bgcolor = Color.RED,
             focusable = true,
             margin = @Margin(left = 50, top = 200),
@@ -30,9 +31,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mainLayoutt = new FrameLayout(this);
-        setContentView(mainLayoutt);
         ViewCreater.newView(this,this);
+        setContentView(mainLayout);
     }
 
     View.OnFocusChangeListener focusChangeListener = new View.OnFocusChangeListener() {
