@@ -5,7 +5,7 @@ package com.creater.annotation;
  */
 
 public @interface Listener {
-    String keyListener() default "";
-    String focusListener() default "";
-    String clickListener() default "";
+    String keyListener() default "";//监听键值
+    String focusListener() default "";//监听焦点变化
+    String clickListener() default "";//监听点击事件
 }

@@ -11,9 +11,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.FIELD)
 public @interface Margin {
-    int left() default 0;
-    int top() default 0;
-    int right() default 0;
-    int bottom() default 0;
+    int left() default 0;//左
+    int top() default 0;//上
+    int right() default 0;//右
+    int bottom() default 0;//下
 }
 
