@@ -41,10 +41,13 @@ public class ParentProcesser implements IProcesser{
         VariableElement variableElement = getFieldElement(field, element);
         NewView view = element.getAnnotation(NewView.class);
         Class paramsClazz = null;
+        int gravity = -1;
         if (variableElement != null) {
             String parentType = variableElement.asType().toString();
             if ("android.widget.FrameLayout".equals(parentType)){
                 paramsClazz = FrameLayout.LayoutParams.class;
+                if (view.layoutGravity() != -1)
+                    gravity = view.layoutGravity();
             }else if("android.widget.LinearLayout".equals(parentType)){
                 paramsClazz = LinearLayout.LayoutParams.class;
             }else if("android.widget.RelativeLayout".equals(parentType)){
@@ -54,17 +57,20 @@ public class ParentProcesser implements IProcesser{
             }
         }
         if (paramsClazz != null)
-            return getLayoutParamsCodeBlock(paramsClazz,view);
+            return getLayoutParamsCodeBlock(paramsClazz,gravity,view);
         return null;
     }
 
-    private CodeBlock.Builder getLayoutParamsCodeBlock(Class clazz,NewView view){
-        return CodeBlock.builder().addStatement("$T params = new $T($L,$L)", clazz,
+    private CodeBlock.Builder getLayoutParamsCodeBlock(Class clazz,int gravity,NewView view){
+        CodeBlock.Builder builder = CodeBlock.builder().addStatement("$T params = new $T($L,$L)", clazz,
                 FrameLayout.LayoutParams.class,view.width(),view.height())
                 .addStatement("params.leftMargin = $L",view.margin().left())
                 .addStatement("params.topMargin = $L",view.margin().top())
                 .addStatement("params.rightMargin = $L",view.margin().right())
                 .addStatement("params.bottomMargin = $L",view.margin().bottom());
+        if (gravity != -1)
+            builder.addStatement("params.gravity = $L",gravity);
+        return builder;
     }
 
     private VariableElement getFieldElement(String field, Element element) {

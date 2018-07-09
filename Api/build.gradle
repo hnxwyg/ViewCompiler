@@ -1,9 +1,13 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
+def jcenter = rootProject.ext.jcenter
 
 android {
     compileSdkVersion 27
 
-
+    lintOptions {
+        abortOnError false
+    }
 
     defaultConfig {
         minSdkVersion 15
@@ -26,5 +30,15 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(":Annotation")
+    compile project(":Annotation")
 }
+
+publish {
+    userOrg = jcenter.userOrg //bintray账户下某个组织id
+    groupId = jcenter.groupId //maven仓库下库的包名，一般为模块包名
+    artifactId = 'ViewCreater' //项目名称
+    publishVersion = jcenter.publishVersion //版本号
+    desc = jcenter.desc //项目介绍，可以不写
+    website = jcenter.website //项目主页，可以不写
+}
+

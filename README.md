@@ -21,6 +21,7 @@
     boolean enable() default false;//是否enable
     boolean select() default false;//是否select
     String parent() default "";//父ViewGroup名称
+    int layoutGravity() default -1;//布局位置,父View为FrameLayout时使用
     Margin margin() default @Margin;//Margin值注解
     Padding padding() default @Padding;//Padding值注解
     Listener listener() default @Listener;//监听注解

@@ -1,8 +1,21 @@
 apply plugin: 'java'
+apply plugin: 'com.novoda.bintray-release'
+
+def jcenter = rootProject.ext.jcenter
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.google.android:android:4.1.1.4'
     compile 'com.google.auto.service:auto-service:1.0-rc3'
     compile 'com.squareup:javapoet:1.11.1'
-    compile project(':Annotation')
+    implementation project(':Annotation')
+}
+
+publish {
+    userOrg = jcenter.userOrg //bintray账户下某个组织id
+    groupId = jcenter.groupId //maven仓库下库的包名，一般为模块包名
+    artifactId = 'ViewCreaterProcesser' //项目名称
+    publishVersion = jcenter.publishVersion //版本号
+    desc = jcenter.desc //项目介绍，可以不写
+    website = jcenter.website //项目主页，可以不写
 }
