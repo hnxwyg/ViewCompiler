@@ -31,6 +31,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 /**
@@ -40,7 +41,8 @@ import javax.tools.Diagnostic;
 public class ViewProcesser extends AbstractProcessor {
 
     private Filer mFiler;
-    private Messager mMessager;
+    private static Messager mMessager;
+    public static Types typeUtils = null;
     private Elements mElementUtils;
     private RoundEnvironment mRoundEnv = null;
     private Map<String, List<Element>> elementMap = new HashMap<>();
@@ -57,6 +59,7 @@ public class ViewProcesser extends AbstractProcessor {
         mFiler = processingEnvironment.getFiler();
         mMessager = processingEnvironment.getMessager();
         mElementUtils = processingEnvironment.getElementUtils();
+        typeUtils = processingEnvironment.getTypeUtils();
     }
 
     @Override
@@ -74,9 +77,6 @@ public class ViewProcesser extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
         long start = System.currentTimeMillis();
-        if (hasProcess)
-            return true;
-        hasProcess = true;
         this.mRoundEnv = roundEnvironment;
         Set<? extends Element> bindViewElements = roundEnvironment.getElementsAnnotatedWith(NewView.class);
         for (Element element : bindViewElements) {
@@ -122,6 +122,7 @@ public class ViewProcesser extends AbstractProcessor {
             JavaFile javaFile = JavaFile.builder(pkg, clazzTypeBuilder.build())
                     .build();
             try {
+                javaFile.toJavaFileObject().delete();
                 javaFile.writeTo(mFiler);
                 long end = System.currentTimeMillis();
                 note("view creater cost time " + (end - start) + "ms");
@@ -147,7 +148,7 @@ public class ViewProcesser extends AbstractProcessor {
         String methodName = "add" + fieldName;
 
         NewView v = element.getAnnotation(NewView.class);
-        if (!isEmpty(v.parent())){
+        if (!isEmpty(v.parent()) && !v.parent().equals("this")){
             if (!processedElement.contains(fieldNameMaps.get(v.parent()))){
                 generateMethod(target,clazzTypeBuilder,methods, fieldNameMaps.get(v.parent()));
             }
@@ -180,11 +181,11 @@ public class ViewProcesser extends AbstractProcessor {
         clazzTypeBuilder.addMethod(methodBuilder.build());
     }
 
-    private void note(String msg) {
+    public static void note(String msg) {
         mMessager.printMessage(Diagnostic.Kind.NOTE, msg);
     }
 
-    private void note(String format, Object... args) {
+    public static void note(String format, Object... args) {
         mMessager.printMessage(Diagnostic.Kind.NOTE, String.format(format, args));
     }
 

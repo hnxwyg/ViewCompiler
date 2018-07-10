@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keep class **_NewView { *; }
+-keep,allowobfuscation @interface com.creater.annotation.*
+
+-keep @com.creater.annotation.* class *
+-keepclasseswithmembernames class * {@com.creater.annotation.* <fields>;}
+-keepclassmembers class * {@com.creater.annotation.* <fields>;}
