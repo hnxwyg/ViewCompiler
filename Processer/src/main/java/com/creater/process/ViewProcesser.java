@@ -77,6 +77,9 @@ public class ViewProcesser extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
         long start = System.currentTimeMillis();
+        if (hasProcess)
+            return true;
+        hasProcess = true;
         this.mRoundEnv = roundEnvironment;
         Set<? extends Element> bindViewElements = roundEnvironment.getElementsAnnotatedWith(NewView.class);
         for (Element element : bindViewElements) {
@@ -124,13 +127,12 @@ public class ViewProcesser extends AbstractProcessor {
             try {
                 javaFile.toJavaFileObject().delete();
                 javaFile.writeTo(mFiler);
-                long end = System.currentTimeMillis();
-                note("view creater cost time " + (end - start) + "ms");
-                return true;
+                note("generate class " + pkg + "." + name + "_NewView");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        note("ViewCreater process annotation cost " + (System.currentTimeMillis() - start) + "ms");
         return false;
     }
 

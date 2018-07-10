@@ -57,7 +57,6 @@ public class ParentProcesser implements IProcesser{
         String parentType = null;
         if (field.equals("this")){
             parentType = getParentType(element);
-            ViewProcesser.note("parenttype " + parentType);
         }else{
             VariableElement variableElement = getFieldElement(field, element);
             parentType = variableElement.asType().toString();
